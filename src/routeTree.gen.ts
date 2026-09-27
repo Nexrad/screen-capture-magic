@@ -10,33 +10,195 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as AppRouteRouteImport } from './routes/app/route'
+import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
+import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
+import { Route as AdminTradesRouteImport } from './routes/admin/trades'
+import { Route as AppAccountRouteImport } from './routes/app/account'
+import { Route as AppDashboardRouteImport } from './routes/app/dashboard'
+import { Route as AppMt5RouteImport } from './routes/app/mt5'
+import { Route as AppNotificationsRouteImport } from './routes/app/notifications'
+import { Route as AppPaymentRouteImport } from './routes/app/payment'
+import { Route as AppRiskRouteImport } from './routes/app/risk'
+import { Route as AppTradesRouteImport } from './routes/app/trades'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRouteRoute = AppRouteRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminTradesRoute = AdminTradesRouteImport.update({
+  id: '/trades',
+  path: '/trades',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AppAccountRoute = AppAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppMt5Route = AppMt5RouteImport.update({
+  id: '/mt5',
+  path: '/mt5',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppNotificationsRoute = AppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppPaymentRoute = AppPaymentRouteImport.update({
+  id: '/payment',
+  path: '/payment',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppRiskRoute = AppRiskRouteImport.update({
+  id: '/risk',
+  path: '/risk',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppTradesRoute = AppTradesRouteImport.update({
+  id: '/trades',
+  path: '/trades',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/app': typeof AppRouteRouteWithChildren
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/trades': typeof AdminTradesRoute
+  '/app/account': typeof AppAccountRoute
+  '/app/dashboard': typeof AppDashboardRoute
+  '/app/mt5': typeof AppMt5Route
+  '/app/notifications': typeof AppNotificationsRoute
+  '/app/payment': typeof AppPaymentRoute
+  '/app/risk': typeof AppRiskRoute
+  '/app/trades': typeof AppTradesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/app': typeof AppRouteRouteWithChildren
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/trades': typeof AdminTradesRoute
+  '/app/account': typeof AppAccountRoute
+  '/app/dashboard': typeof AppDashboardRoute
+  '/app/mt5': typeof AppMt5Route
+  '/app/notifications': typeof AppNotificationsRoute
+  '/app/payment': typeof AppPaymentRoute
+  '/app/risk': typeof AppRiskRoute
+  '/app/trades': typeof AppTradesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/app': typeof AppRouteRouteWithChildren
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/trades': typeof AdminTradesRoute
+  '/app/account': typeof AppAccountRoute
+  '/app/dashboard': typeof AppDashboardRoute
+  '/app/mt5': typeof AppMt5Route
+  '/app/notifications': typeof AppNotificationsRoute
+  '/app/payment': typeof AppPaymentRoute
+  '/app/risk': typeof AppRiskRoute
+  '/app/trades': typeof AppTradesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/app'
+    | '/admin/customers'
+    | '/admin/dashboard'
+    | '/admin/payments'
+    | '/admin/trades'
+    | '/app/account'
+    | '/app/dashboard'
+    | '/app/mt5'
+    | '/app/notifications'
+    | '/app/payment'
+    | '/app/risk'
+    | '/app/trades'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/admin'
+    | '/app'
+    | '/admin/customers'
+    | '/admin/dashboard'
+    | '/admin/payments'
+    | '/admin/trades'
+    | '/app/account'
+    | '/app/dashboard'
+    | '/app/mt5'
+    | '/app/notifications'
+    | '/app/payment'
+    | '/app/risk'
+    | '/app/trades'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/app'
+    | '/admin/customers'
+    | '/admin/dashboard'
+    | '/admin/payments'
+    | '/admin/trades'
+    | '/app/account'
+    | '/app/dashboard'
+    | '/app/mt5'
+    | '/app/notifications'
+    | '/app/payment'
+    | '/app/risk'
+    | '/app/trades'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  AppRouteRoute: typeof AppRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +210,146 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/customers': {
+      id: '/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/payments': {
+      id: '/admin/payments'
+      path: '/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AdminPaymentsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/trades': {
+      id: '/admin/trades'
+      path: '/trades'
+      fullPath: '/admin/trades'
+      preLoaderRoute: typeof AdminTradesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/app/account': {
+      id: '/app/account'
+      path: '/account'
+      fullPath: '/app/account'
+      preLoaderRoute: typeof AppAccountRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/dashboard': {
+      id: '/app/dashboard'
+      path: '/dashboard'
+      fullPath: '/app/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/mt5': {
+      id: '/app/mt5'
+      path: '/mt5'
+      fullPath: '/app/mt5'
+      preLoaderRoute: typeof AppMt5RouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/notifications': {
+      id: '/app/notifications'
+      path: '/notifications'
+      fullPath: '/app/notifications'
+      preLoaderRoute: typeof AppNotificationsRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/payment': {
+      id: '/app/payment'
+      path: '/payment'
+      fullPath: '/app/payment'
+      preLoaderRoute: typeof AppPaymentRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/risk': {
+      id: '/app/risk'
+      path: '/risk'
+      fullPath: '/app/risk'
+      preLoaderRoute: typeof AppRiskRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/trades': {
+      id: '/app/trades'
+      path: '/trades'
+      fullPath: '/app/trades'
+      preLoaderRoute: typeof AppTradesRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
   }
 }
 
+interface AdminRouteRouteChildren {
+  AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminPaymentsRoute: typeof AdminPaymentsRoute
+  AdminTradesRoute: typeof AdminTradesRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminCustomersRoute: AdminCustomersRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
+  AdminPaymentsRoute: AdminPaymentsRoute,
+  AdminTradesRoute: AdminTradesRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
+interface AppRouteRouteChildren {
+  AppAccountRoute: typeof AppAccountRoute
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppMt5Route: typeof AppMt5Route
+  AppNotificationsRoute: typeof AppNotificationsRoute
+  AppPaymentRoute: typeof AppPaymentRoute
+  AppRiskRoute: typeof AppRiskRoute
+  AppTradesRoute: typeof AppTradesRoute
+}
+
+const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppAccountRoute: AppAccountRoute,
+  AppDashboardRoute: AppDashboardRoute,
+  AppMt5Route: AppMt5Route,
+  AppNotificationsRoute: AppNotificationsRoute,
+  AppPaymentRoute: AppPaymentRoute,
+  AppRiskRoute: AppRiskRoute,
+  AppTradesRoute: AppTradesRoute,
+}
+
+const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
+  AppRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
+  AppRouteRoute: AppRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
