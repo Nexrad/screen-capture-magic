@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteRouteImport } from './routes/app/route'
+import { Route as AppAccountRouteImport } from './routes/app/account'
 import { Route as AppDashboardRouteImport } from './routes/app/dashboard'
 import { Route as AppMt5RouteImport } from './routes/app/mt5'
 import { Route as AppNotificationsRouteImport } from './routes/app/notifications'
@@ -27,6 +28,11 @@ const AppRouteRoute = AppRouteRouteImport.update({
   id: '/app',
   path: '/app',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppAccountRoute = AppAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
@@ -62,6 +68,7 @@ const AppTradesRoute = AppTradesRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
+  '/app/account': typeof AppAccountRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/mt5': typeof AppMt5Route
   '/app/notifications': typeof AppNotificationsRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
+  '/app/account': typeof AppAccountRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/mt5': typeof AppMt5Route
   '/app/notifications': typeof AppNotificationsRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
+  '/app/account': typeof AppAccountRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/mt5': typeof AppMt5Route
   '/app/notifications': typeof AppNotificationsRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
+    | '/app/account'
     | '/app/dashboard'
     | '/app/mt5'
     | '/app/notifications'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/app'
+    | '/app/account'
     | '/app/dashboard'
     | '/app/mt5'
     | '/app/notifications'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/app'
+    | '/app/account'
     | '/app/dashboard'
     | '/app/mt5'
     | '/app/notifications'
@@ -143,6 +155,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app'
       preLoaderRoute: typeof AppRouteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/app/account': {
+      id: '/app/account'
+      path: '/account'
+      fullPath: '/app/account'
+      preLoaderRoute: typeof AppAccountRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/app/dashboard': {
       id: '/app/dashboard'
@@ -190,6 +209,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteRouteChildren {
+  AppAccountRoute: typeof AppAccountRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppMt5Route: typeof AppMt5Route
   AppNotificationsRoute: typeof AppNotificationsRoute
@@ -199,6 +219,7 @@ interface AppRouteRouteChildren {
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppAccountRoute: AppAccountRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppMt5Route: AppMt5Route,
   AppNotificationsRoute: AppNotificationsRoute,
