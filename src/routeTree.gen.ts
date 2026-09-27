@@ -14,6 +14,7 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AppAccountRouteImport } from './routes/app/account'
 import { Route as AppDashboardRouteImport } from './routes/app/dashboard'
 import { Route as AppMt5RouteImport } from './routes/app/mt5'
@@ -45,6 +46,11 @@ const AdminCustomersRoute = AdminCustomersRouteImport.update({
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AppAccountRoute = AppAccountRouteImport.update({
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteRouteWithChildren
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/payments': typeof AdminPaymentsRoute
   '/app/account': typeof AppAccountRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/mt5': typeof AppMt5Route
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppRouteRouteWithChildren
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/payments': typeof AdminPaymentsRoute
   '/app/account': typeof AppAccountRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/mt5': typeof AppMt5Route
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/app': typeof AppRouteRouteWithChildren
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/payments': typeof AdminPaymentsRoute
   '/app/account': typeof AppAccountRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/mt5': typeof AppMt5Route
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/admin/customers'
     | '/admin/dashboard'
+    | '/admin/payments'
     | '/app/account'
     | '/app/dashboard'
     | '/app/mt5'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/admin/customers'
     | '/admin/dashboard'
+    | '/admin/payments'
     | '/app/account'
     | '/app/dashboard'
     | '/app/mt5'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/admin/customers'
     | '/admin/dashboard'
+    | '/admin/payments'
     | '/app/account'
     | '/app/dashboard'
     | '/app/mt5'
@@ -212,6 +224,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/admin/dashboard'
       preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/payments': {
+      id: '/admin/payments'
+      path: '/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AdminPaymentsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/app/account': {
@@ -269,11 +288,13 @@ declare module '@tanstack/react-router' {
 interface AdminRouteRouteChildren {
   AdminCustomersRoute: typeof AdminCustomersRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminPaymentsRoute: typeof AdminPaymentsRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminCustomersRoute: AdminCustomersRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminPaymentsRoute: AdminPaymentsRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
