@@ -9,7 +9,7 @@ import {
   User,
 } from "lucide-react";
 import { AppShell, type NavItem } from "@/components/app-shell";
-import { requireUser } from "@/lib/guard";
+import { RequireAuth } from "@/components/require-auth";
 
 const items: NavItem[] = [
   { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -22,14 +22,17 @@ const items: NavItem[] = [
 ];
 
 export const Route = createFileRoute("/app")({
+  // The whole /app tree depends on the browser's session_token cookie, which
+  // the Node SSR process never has - rendering it server-side would either
+  // require forwarding cookies to a manual backend call during SSR or would
+  // always render as "logged out". Client-only avoids both problems and
+  // costs nothing here since this area isn't meant to be indexed anyway.
   ssr: false,
-  beforeLoad: async ({ context, location }) => ({
-    user: await requireUser(context.queryClient, location.href),
-  }),
-  pendingComponent: () => <p className="p-10 text-center text-sm text-muted-foreground">Loading...</p>,
   component: () => (
-    <AppShell items={items} title="CopyTrade Pro">
-      <Outlet />
-    </AppShell>
+    <RequireAuth>
+      <AppShell items={items} title="CopyTrade Pro">
+        <Outlet />
+      </AppShell>
+    </RequireAuth>
   ),
 });

@@ -1,10 +1,122 @@
-// Central client for the existing CopyTrade Pro Python backend.
-// In local dev, requests go to "/api/*" on the same origin and Vite proxies them to
-// http://127.0.0.1:8000 (see vite.config.ts), so the HttpOnly session cookie works
-// without any CORS changes on the backend. Override with VITE_API_BASE_URL if needed.
+// src/lib/api.ts
+//
+// Centralized client for the CopyTrade Pro Python backend.
+//
+// The backend is a separate process (default http://127.0.0.1:8000) from
+// this frontend's dev server (default http://localhost:8080), so every
+// call here goes straight to the backend origin over fetch() with
+// `credentials: "include"` - that's what makes the browser attach the
+// HttpOnly `session_token` cookie the backend sets on login/register.
+// See app/http_app.py on the backend for the matching CORS/cookie setup.
+//
+// Override the backend origin at build/dev time with VITE_API_BASE_URL if
+// you're not running the default `python main.py` on 127.0.0.1:8000.
+export const API_BASE: string =
+  (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.[
+    "VITE_API_BASE_URL"
+  ] ?? "http://127.0.0.1:8000";
 
-export const API_BASE_URL: string =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") || "/api";
+export type Role = "customer" | "admin";
+
+export type User = {
+  id: string;
+  email: string;
+  role: Role;
+};
+
+export type Access = {
+  id: string;
+  user_id: string;
+  status: "active" | "expired";
+  access_start: string | null;
+  access_end: string | null;
+  activated_by: string | null;
+  payment_id: string | null;
+  created_at: string;
+};
+
+export type CustomerSettings = {
+  user_id: string;
+  copy_enabled: number;
+  provider_enabled: number;
+  fixed_lot: number;
+  max_open_trades: number;
+  max_daily_loss: number | null;
+  max_drawdown_percent: number | null;
+  updated_at: string;
+};
+
+export type Mt5Account = {
+  id: string;
+  login: string;
+  server: string;
+  connected: number;
+  last_error: string | null;
+};
+
+export type CustomerStatus = {
+  access: Access | null;
+  settings: CustomerSettings | null;
+  mt5_account: Mt5Account | null;
+};
+
+export type Payment = {
+  id: string;
+  method: "telebirr" | "cbe";
+  claimed_amount: number | null;
+  status: "pending_review" | "approved" | "rejected";
+  rejection_reason: string | null;
+  submitted_at: string;
+  reviewed_at: string | null;
+};
+
+export type Order = {
+  id: string;
+  user_id: string;
+  signal_id: string;
+  symbol: string;
+  direction: string;
+  lot: number;
+  status: "pending" | "filled" | "rejected" | "error";
+  broker_ticket: string | null;
+  error_detail: string | null;
+  requested_at: string;
+  executed_at: string | null;
+};
+
+export type AdminCustomer = {
+  id: string;
+  email: string;
+  is_active: number;
+  created_at: string;
+  access_status: "active" | null;
+  access_end: string | null;
+  mt5_connected: number | null;
+  copy_enabled: number | null;
+};
+
+export type AdminPayment = Payment & {
+  user_id: string;
+  email: string;
+  receipt_path: string;
+};
+
+export type TradingOverview = {
+  open_trades: number;
+  active_customers: number;
+};
+
+export type SystemEvent = {
+  component: string;
+  level: string;
+  message: string;
+  created_at: string;
+};
+
+export type SystemHealth = {
+  recent_events: SystemEvent[];
+  emergency_stop: boolean;
+};
 
 export class ApiError extends Error {
   status: number;
@@ -14,189 +126,210 @@ export class ApiError extends Error {
   }
 }
 
-function friendly(status: number, backendMsg?: string) {
-  if (status === 401) return "Your session has expired. Please log in again.";
-  if (status === 403) return "You don't have permission to do that.";
-  if (status >= 500) return "Something went wrong on the server. Please try again.";
-  return backendMsg || "Request failed. Please try again.";
-}
-
-type Opts = { method?: "GET" | "POST"; body?: unknown; redirectOn401?: boolean };
-
-export async function request<T>(path: string, opts: Opts = {}): Promise<T> {
-  const { method = "GET", body, redirectOn401 = true } = opts;
-  let res: Response;
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  let response: Response;
   try {
-    res = await fetch(`${API_BASE_URL}${path}`, {
-      method,
+    response = await fetch(`${API_BASE}${path}`, {
+      ...options,
       credentials: "include",
-      headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      headers: {
+        "Content-Type": "application/json",
+        ...(options.headers ?? {}),
+      },
     });
   } catch {
-    throw new ApiError("Can't reach the CopyTrade Pro server. Is the backend running?", 0);
+    throw new ApiError(
+      `Could not reach the CopyTrade Pro server at ${API_BASE}. Is the backend running?`,
+      0,
+    );
   }
-  let data: unknown = null;
-  try {
-    data = await res.json();
-  } catch {
-    data = null;
+
+  const data = await response.json().catch(() => ({}) as Record<string, unknown>);
+
+  if (!response.ok) {
+    const message =
+      typeof (data as { error?: unknown }).error === "string"
+        ? (data as { error: string }).error
+        : `Request failed (${response.status})`;
+    throw new ApiError(message, response.status);
   }
-  if (!res.ok) {
-    const msg =
-      data && typeof data === "object" && "error" in data && typeof data.error === "string"
-        ? data.error
-        : undefined;
-    if (res.status === 401 && redirectOn401 && typeof window !== "undefined") {
-      const here = window.location.pathname + window.location.search;
-      if (!window.location.pathname.startsWith("/login")) {
-        window.location.assign(`/login?redirect=${encodeURIComponent(here)}`);
-      }
-    }
-    throw new ApiError(friendly(res.status, msg), res.status);
-  }
+
   return data as T;
 }
 
-// ---------- Types matching the backend responses ----------
+// ---------------- Auth ----------------
 
-export type Role = "customer" | "admin";
-export type Me = { id: string; email: string; role: Role };
-
-export type Access = {
-  id: string;
-  status: "active" | "expired" | string;
-  access_start: string | null;
-  access_end: string | null;
-  created_at: string;
-} | null;
-
-export type Settings = {
-  copy_enabled: number;
-  provider_enabled: number;
-  fixed_lot: number;
-  max_open_trades: number;
-  max_daily_loss: number | null;
-  max_drawdown_percent: number | null;
-  updated_at: string;
-} | null;
-
-export type Mt5Account = {
-  id: string;
-  login: string;
-  server: string;
-  connected: number;
-  last_error: string | null;
-} | null;
-
-export type CustomerStatus = { access: Access; settings: Settings; mt5_account: Mt5Account };
-
-export type Order = {
-  id: string;
-  symbol: string;
-  direction: string;
-  lot: number;
-  status: "pending" | "filled" | "rejected" | "error" | string;
-  broker_ticket: string | null;
-  error_detail: string | null;
-  requested_at: string;
-  executed_at: string | null;
-};
-
-export type Payment = {
-  id: string;
-  method: string;
-  claimed_amount: number | null;
-  status: "pending_review" | "approved" | "rejected" | string;
-  rejection_reason: string | null;
-  submitted_at: string;
-  reviewed_at: string | null;
-};
-
-export type PendingPayment = Payment & { email: string; user_id: string };
-
-export type AdminCustomer = {
-  id: string;
-  email: string;
-  is_active: number;
-  created_at: string;
-  access_status: string | null;
-  access_end: string | null;
-  mt5_connected: number | null;
-  copy_enabled: number | null;
-};
-
-export type SystemEvent = { component: string; level: string; message: string; created_at: string };
-
-// ---------- Endpoints ----------
-
-export const api = {
-  me: () => request<Me>("/auth/me", { redirectOn401: false }),
-  login: (email: string, password: string) =>
-    request<Me>("/auth/login", { method: "POST", body: { email, password }, redirectOn401: false }),
-  register: (email: string, password: string) =>
-    request<{ id: string; email: string }>("/auth/register", {
-      method: "POST",
-      body: { email, password },
-      redirectOn401: false,
-    }),
-  logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST", redirectOn401: false }),
-
-  status: () => request<CustomerStatus>("/customer/status"),
-  copyToggle: (enabled: boolean) =>
-    request<{ copy_enabled: boolean }>("/customer/copy-toggle", { method: "POST", body: { enabled } }),
-  saveMt5: (login: string, password: string, server: string) =>
-    request<{ id: string; login: string; server: string }>("/customer/mt5", {
-      method: "POST",
-      body: { login, password, server },
-    }),
-  testMt5: () => request<{ connected: boolean; error: string | null }>("/customer/mt5/test", { method: "POST" }),
-  saveSettings: (s: {
-    fixed_lot: number;
-    max_open_trades: number;
-    max_daily_loss: number | null;
-    max_drawdown_percent: number | null;
-  }) => request<Settings>("/customer/settings", { method: "POST", body: s }),
-  orders: () => request<{ orders: Order[] }>("/customer/orders"),
-  payments: () => request<{ payments: Payment[] }>("/customer/payments"),
-  submitPayment: (b: {
-    method: "telebirr" | "cbe";
-    claimed_amount: number;
-    receipt_filename: string;
-    receipt_b64: string;
-  }) => request<{ id: string; status: string }>("/customer/payments", { method: "POST", body: b }),
-
-  adminCustomers: () => request<{ customers: AdminCustomer[] }>("/admin/customers"),
-  adminSetActive: (id: string, active: boolean) =>
-    request<{ ok: boolean }>(`/admin/customers/${encodeURIComponent(id)}/active`, {
-      method: "POST",
-      body: { active },
-    }),
-  adminPendingPayments: () => request<{ payments: PendingPayment[] }>("/admin/payments/pending"),
-  adminApprove: (id: string) =>
-    request<{ status: string }>(`/admin/payments/${encodeURIComponent(id)}/approve`, { method: "POST" }),
-  adminReject: (id: string, reason: string) =>
-    request<{ status: string }>(`/admin/payments/${encodeURIComponent(id)}/reject`, {
-      method: "POST",
-      body: { reason },
-    }),
-  adminOverview: () =>
-    request<{ open_trades: number; active_customers: number }>("/admin/trading/overview"),
-  adminEmergencyStop: (active: boolean) =>
-    request<{ emergency_stop: boolean }>("/admin/emergency-stop", { method: "POST", body: { active } }),
-  adminHealth: () =>
-    request<{ recent_events: SystemEvent[]; emergency_stop: boolean }>("/admin/system/health"),
-};
-
-export function fmtDate(s: string | null | undefined, withTime = false) {
-  if (!s) return "—";
-  const d = new Date(s);
-  if (Number.isNaN(d.getTime())) return s;
-  return withTime
-    ? d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-    : d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+export function register(email: string, password: string) {
+  return request<{ id: string; email: string }>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
 }
 
-export function errMsg(e: unknown) {
-  return e instanceof Error ? e.message : "Something went wrong.";
+export function login(email: string, password: string) {
+  return request<User>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
 }
+
+export function getCurrentUser() {
+  return request<User>("/auth/me");
+}
+
+/** Like getCurrentUser, but resolves to null instead of throwing when logged out. */
+export async function getCurrentUserOrNull(): Promise<User | null> {
+  try {
+    return await getCurrentUser();
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 401) return null;
+    throw err;
+  }
+}
+
+export function logout() {
+  return request<{ ok: true }>("/auth/logout", { method: "POST" });
+}
+
+export function changePassword(currentPassword: string, newPassword: string) {
+  return request<{ ok: true }>("/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  });
+}
+
+// ---------------- Customer ----------------
+
+export function getCustomerStatus() {
+  return request<CustomerStatus>("/customer/status");
+}
+
+export function saveMt5Account(login: string, password: string, server: string) {
+  return request<{ id: string; login: string; server: string }>("/customer/mt5", {
+    method: "POST",
+    body: JSON.stringify({ login, password, server }),
+  });
+}
+
+export function testMt5Connection() {
+  return request<{ connected: boolean; error: string | null }>("/customer/mt5/test", {
+    method: "POST",
+  });
+}
+
+export function updateRiskSettings(input: {
+  fixed_lot?: number;
+  max_open_trades?: number;
+  max_daily_loss?: number | null;
+  max_drawdown_percent?: number | null;
+}) {
+  return request<CustomerSettings>("/customer/settings", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function setCopyEnabled(enabled: boolean) {
+  return request<{ copy_enabled: boolean }>("/customer/copy-toggle", {
+    method: "POST",
+    body: JSON.stringify({ enabled }),
+  });
+}
+
+export function setProviderEnabled(enabled: boolean) {
+  return request<{ provider_enabled: boolean }>("/customer/provider-toggle", {
+    method: "POST",
+    body: JSON.stringify({ enabled }),
+  });
+}
+
+export function submitPayment(input: {
+  method: "telebirr" | "cbe";
+  claimed_amount?: number;
+  receipt_filename: string;
+  receipt_b64: string;
+}) {
+  return request<{ id: string; status: string }>("/customer/payments", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export type PaymentInfo = {
+  challenge_price: string;
+  payment_instructions: Record<"telebirr" | "cbe", string>;
+  methods: string[];
+};
+
+export function getPaymentInfo() {
+  return request<PaymentInfo>("/customer/payment-info");
+}
+
+export function listMyPayments() {
+  return request<{ payments: Payment[] }>("/customer/payments");
+}
+
+export function listMyOrders() {
+  return request<{ orders: Order[] }>("/customer/orders");
+}
+
+/** Reads a File from an <input type="file"> into a base64 string for submitPayment(). */
+export function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // strip the "data:<mime>;base64," prefix - the backend wants raw base64
+      resolve(result.split(",")[1] ?? "");
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("Could not read file"));
+    reader.readAsDataURL(file);
+  });
+}
+
+// ---------------- Admin ----------------
+
+export const admin = {
+  listCustomers() {
+    return request<{ customers: AdminCustomer[] }>("/admin/customers");
+  },
+  setCustomerActive(customerId: string, active: boolean) {
+    return request<{ ok: true }>(`/admin/customers/${customerId}/active`, {
+      method: "POST",
+      body: JSON.stringify({ active }),
+    });
+  },
+  activateCustomer(customerId: string, days?: number) {
+    return request<{ status: string; access_start: string; access_end: string }>(
+      `/admin/customers/${customerId}/activate`,
+      { method: "POST", body: JSON.stringify(days ? { days } : {}) },
+    );
+  },
+  listPendingPayments() {
+    return request<{ payments: AdminPayment[] }>("/admin/payments/pending");
+  },
+  approvePayment(paymentId: string) {
+    return request<{ status: string; access_start: string; access_end: string }>(
+      `/admin/payments/${paymentId}/approve`,
+      { method: "POST" },
+    );
+  },
+  rejectPayment(paymentId: string, reason: string) {
+    return request<{ status: string; reason: string }>(`/admin/payments/${paymentId}/reject`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
+  },
+  tradingOverview() {
+    return request<TradingOverview>("/admin/trading/overview");
+  },
+  setEmergencyStop(active: boolean) {
+    return request<{ emergency_stop: boolean }>("/admin/emergency-stop", {
+      method: "POST",
+      body: JSON.stringify({ active }),
+    });
+  },
+  systemHealth() {
+    return request<SystemHealth>("/admin/system/health");
+  },
+};

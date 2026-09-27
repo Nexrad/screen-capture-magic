@@ -1,9 +1,8 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
-import { Menu, X, TrendingUp } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { Menu, X, TrendingUp, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { api } from "@/lib/api";
+import { useCurrentUser, useLogout } from "@/lib/auth";
 
 export type NavItem = { to: string; label: string; icon: React.ComponentType<{ className?: string }> };
 
@@ -18,16 +17,16 @@ export function AppShell({
 }) {
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const qc = useQueryClient();
-  async function logout() {
-    try {
-      await api.logout();
-    } catch {
-      // Session may already be gone; clear local state regardless.
-    }
-    qc.clear();
-    window.location.assign("/");
-  }
+  const { data: user } = useCurrentUser();
+  const logout = useLogout();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    setOpen(false);
+    logout.mutate(undefined, {
+      onSettled: () => navigate({ to: "/", replace: true }),
+    });
+  };
 
   const nav = (
     <nav className="flex flex-col gap-1">
@@ -52,11 +51,13 @@ export function AppShell({
         );
       })}
       <button
-        onClick={logout}
-        className="mt-2 flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-muted-foreground hover:bg-secondary"
+        type="button"
+        onClick={handleLogout}
+        disabled={logout.isPending}
+        className="mt-2 flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-muted-foreground hover:bg-secondary disabled:opacity-60"
       >
-        <X className="size-4" />
-        Logout
+        <LogOut className="size-4" />
+        {logout.isPending ? "Logging out…" : "Logout"}
       </button>
     </nav>
   );
@@ -65,6 +66,11 @@ export function AppShell({
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-sidebar-border bg-sidebar p-4 lg:flex">
         <Brand title={title} />
+        {user ? (
+          <p className="mt-4 truncate text-xs text-muted-foreground" title={user.email}>
+            {user.email}
+          </p>
+        ) : null}
         <div className="mt-6">{nav}</div>
       </aside>
 

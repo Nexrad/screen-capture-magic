@@ -18,10 +18,17 @@ async function getServerEntry(): Promise<ServerEntry> {
   return serverEntryPromise;
 }
 
-// h3 swallows in-handler throws into a normal 500 Response with body
-// {"unhandled":true,"message":"HTTPError"} — try/catch alone never fires for those.
+// NOTE: there used to be a proxyApi() here forwarding /api/* to the Python
+// backend through this SSR server. It's gone on purpose: the frontend now
+// calls the backend directly (see src/lib/api.ts, API_BASE) over CORS with
+// credentials, which is simpler and doesn't depend on this Node process
+// being in the loop for every request. See app/http_app.py on the backend
+// for the matching CORS + cookie configuration.
+
+// h3 can swallow certain SSR errors into a normal 500 response.
 async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
   if (response.status < 500) return response;
+
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) return response;
 
@@ -29,6 +36,7 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   if (!isH3SwallowedErrorBody(body)) return response;
 
   console.error(consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`));
+
   return new Response(renderErrorPage(), {
     status: 500,
     headers: { "content-type": "text/html; charset=utf-8" },
@@ -37,7 +45,11 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 
 function isH3SwallowedErrorBody(body: string): boolean {
   try {
-    const payload = JSON.parse(body) as { unhandled?: unknown; message?: unknown };
+    const payload = JSON.parse(body) as {
+      unhandled?: unknown;
+      message?: unknown;
+    };
+
     return payload.unhandled === true && payload.message === "HTTPError";
   } catch {
     return false;
@@ -49,9 +61,11 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
+
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
       console.error(error);
+
       return new Response(renderErrorPage(), {
         status: 500,
         headers: { "content-type": "text/html; charset=utf-8" },

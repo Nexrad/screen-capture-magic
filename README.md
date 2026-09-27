@@ -1,13 +1,14 @@
-# Screen Capture Magic
+# Exact Screenshot
 
-https://github.com/Nexrad/exact-screenshot-showcase-27?utm_source=chatgpt.com
-this is the GitHub repository
+Implement exactly the screenshot and nothing else
 
 This project was built with [Lovable](https://lovable.dev).
 
+**Live app**: https://exact-screenshot-showcase-27.lovable.app
+
 ## Build with Lovable
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/d4980a5a-2b59-4523-8e89-d5e27024f5f4).
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/19de5657-6b7a-4bc9-9628-628e5d2affa5).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
 - **Stay in sync**: every change made in Lovable is committed straight to this repository.

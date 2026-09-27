@@ -2,32 +2,32 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Brand } from "@/components/app-shell";
 import { ErrorBanner } from "@/components/status";
-import { useLogin } from "@/lib/auth";
+import { useRegister } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
 
-export const Route = createFileRoute("/login")({
+export const Route = createFileRoute("/register")({
   head: () => ({
-    meta: [{ title: "Log in — CopyTrade Pro" }],
+    meta: [{ title: "Create an account — CopyTrade Pro" }],
   }),
-  component: Login,
+  component: Register,
 });
 
 const field =
   "mt-1.5 w-full rounded-lg border border-input bg-surface px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20";
 
-function Login() {
+function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const login = useLogin();
+  const register = useRegister();
   const navigate = useNavigate();
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    login.mutate(
+    register.mutate(
       { email, password },
       {
-        onSuccess: (user) => {
-          navigate({ to: user.role === "admin" ? "/admin/dashboard" : "/app/dashboard" });
+        onSuccess: () => {
+          navigate({ to: "/app/dashboard" });
         },
       },
     );
@@ -40,9 +40,9 @@ function Login() {
           <Brand title="CopyTrade Pro" />
         </div>
         <div className="card-surface p-6">
-          <h1 className="text-xl font-bold text-ink">Log in</h1>
+          <h1 className="text-xl font-bold text-ink">Create an account</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Welcome back. Enter your details to continue.
+            Sign up to connect your MT5 account and start copying signals.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-5 space-y-4">
@@ -68,18 +68,20 @@ function Login() {
                 id="password"
                 type="password"
                 required
-                autoComplete="current-password"
+                minLength={10}
+                autoComplete="new-password"
                 className={field}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <p className="mt-1.5 text-xs text-muted-foreground">At least 10 characters.</p>
             </div>
 
-            {login.isError ? (
+            {register.isError ? (
               <ErrorBanner
                 message={
-                  login.error instanceof ApiError
-                    ? login.error.message
+                  register.error instanceof ApiError
+                    ? register.error.message
                     : "Something went wrong. Please try again."
                 }
               />
@@ -87,17 +89,17 @@ function Login() {
 
             <button
               type="submit"
-              disabled={login.isPending}
+              disabled={register.isPending}
               className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
             >
-              {login.isPending ? "Logging in…" : "Log in"}
+              {register.isPending ? "Creating account…" : "Create account"}
             </button>
           </form>
 
           <p className="mt-5 text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
-            <Link to="/register" className="font-medium text-primary hover:underline">
-              Create one
+            Already have an account?{" "}
+            <Link to="/login" className="font-medium text-primary hover:underline">
+              Log in
             </Link>
           </p>
         </div>

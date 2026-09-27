@@ -66,8 +66,7 @@ function Home() {
               Log in
             </Link>
             <Link
-              to="/login"
-              search={{ mode: "register" }}
+              to="/register"
               className="rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
             >
               Get started

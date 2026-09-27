@@ -1,3 +1,4 @@
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Status } from "@/lib/mock-data";
 import type { ReactNode } from "react";
@@ -75,6 +76,39 @@ export function StatCard({
       <p className="mt-2 text-2xl font-semibold text-ink">{value}</p>
       {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
     </div>
+  );
+}
+
+/** Full-viewport spinner - used while a route's auth check is in flight. */
+export function PageSpinner() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <Loader2 className="size-6 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
+/** Inline loading row for a card/section that's fetching data. */
+export function LoadingRow({ label = "Loading…" }: { label?: string }) {
+  return (
+    <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
+      <Loader2 className="size-4 animate-spin" />
+      {label}
+    </div>
+  );
+}
+
+/** Empty-state placeholder - used instead of ever inventing fake data. */
+export function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="py-8 text-center text-sm text-muted-foreground">{message}</div>
+  );
+}
+
+/** Inline error banner for a failed API call. */
+export function ErrorBanner({ message }: { message: string }) {
+  return (
+    <div className="rounded-lg bg-danger-soft px-4 py-3 text-sm text-destructive">{message}</div>
   );
 }
 
