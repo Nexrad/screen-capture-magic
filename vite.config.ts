@@ -12,4 +12,16 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    server: {
+      // Local dev: forward /api/* to the existing Python backend so the session cookie is same-origin.
+      proxy: {
+        "/api": {
+          target: process.env.BACKEND_URL || "http://127.0.0.1:8000",
+          changeOrigin: true,
+          rewrite: (p: string) => p.replace(/^\/api/, ""),
+        },
+      },
+    },
+  },
 });
