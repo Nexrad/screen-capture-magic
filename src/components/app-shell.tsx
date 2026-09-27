@@ -1,7 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { Menu, X, TrendingUp } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 export type NavItem = { to: string; label: string; icon: React.ComponentType<{ className?: string }> };
 
@@ -16,6 +18,16 @@ export function AppShell({
 }) {
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const qc = useQueryClient();
+  async function logout() {
+    try {
+      await api.logout();
+    } catch {
+      // Session may already be gone; clear local state regardless.
+    }
+    qc.clear();
+    window.location.assign("/");
+  }
 
   const nav = (
     <nav className="flex flex-col gap-1">
@@ -39,13 +51,13 @@ export function AppShell({
           </Link>
         );
       })}
-      <Link
-        to="/"
-        className="mt-2 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary"
+      <button
+        onClick={logout}
+        className="mt-2 flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-muted-foreground hover:bg-secondary"
       >
         <X className="size-4" />
         Logout
-      </Link>
+      </button>
     </nav>
   );
 
